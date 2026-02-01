@@ -1,0 +1,1936 @@
+import React, { useState, useEffect } from 'react';
+
+// UCLA Colors
+const colors = {
+  uclaBlue: '#2774AE',
+  uclaGold: '#FFD100',
+  darkBlue: '#003B5C',
+  lightGold: '#FFE066',
+  cream: '#FFF9E6',
+  white: '#FFFFFF',
+  darkGray: '#1a1a2e',
+};
+
+// Payment Modal Component
+const PaymentModal = ({ isOpen, onClose, paymentType, plan }) => {
+  const [step, setStep] = useState('form'); // form, cardSelect, 2fa, processing, success
+  const [cardType, setCardType] = useState('');
+  const [authMethod, setAuthMethod] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    venmoUsername: '',
+  });
+
+  if (!isOpen) return null;
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCardSelect = (type) => {
+    setCardType(type);
+  };
+
+  const handle2FA = (method) => {
+    setAuthMethod(method);
+    setStep('processing');
+    setTimeout(() => setStep('almostThere'), 2000);
+    setTimeout(() => setStep('success'), 4000);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setStep('2fa');
+  };
+
+  const resetAndClose = () => {
+    setStep('form');
+    setCardType('');
+    setAuthMethod('');
+    setFormData({
+      name: '', email: '', phone: '', address: '', city: '', state: '', zip: '',
+      cardNumber: '', expiry: '', cvv: '', venmoUsername: '',
+    });
+    onClose();
+  };
+
+  const modalStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    animation: 'fadeIn 0.3s ease',
+  };
+
+  const contentStyle = {
+    backgroundColor: colors.white,
+    borderRadius: '20px',
+    padding: '40px',
+    maxWidth: '500px',
+    width: '90%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    position: 'relative',
+    boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '14px 18px',
+    border: `2px solid ${colors.uclaBlue}20`,
+    borderRadius: '12px',
+    fontSize: '16px',
+    marginBottom: '16px',
+    transition: 'all 0.3s ease',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '8px',
+    fontWeight: '600',
+    color: colors.darkBlue,
+    fontSize: '14px',
+  };
+
+  const buttonStyle = {
+    width: '100%',
+    padding: '16px',
+    backgroundColor: colors.uclaBlue,
+    color: colors.white,
+    border: 'none',
+    borderRadius: '12px',
+    fontSize: '18px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginTop: '20px',
+  };
+
+  const cardOptionStyle = (selected) => ({
+    padding: '20px',
+    border: `3px solid ${selected ? colors.uclaGold : colors.uclaBlue + '30'}`,
+    borderRadius: '12px',
+    cursor: 'pointer',
+    textAlign: 'center',
+    transition: 'all 0.3s ease',
+    backgroundColor: selected ? colors.cream : colors.white,
+    flex: 1,
+    margin: '0 8px',
+  });
+
+  // Processing/Success Overlays
+  if (step === 'processing') {
+    return (
+      <div style={modalStyle}>
+        <div style={{ ...contentStyle, textAlign: 'center', padding: '60px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            border: `6px solid ${colors.uclaBlue}20`,
+            borderTopColor: colors.uclaBlue,
+            borderRadius: '50%',
+            margin: '0 auto 30px',
+            animation: 'spin 1s linear infinite',
+          }} />
+          <h2 style={{ color: colors.darkBlue, fontSize: '24px', marginBottom: '10px' }}>
+            Processing Payment Information
+          </h2>
+          <p style={{ color: '#666' }}>Please wait while we securely process your payment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'almostThere') {
+    return (
+      <div style={modalStyle}>
+        <div style={{ ...contentStyle, textAlign: 'center', padding: '60px' }}>
+          <div style={{ fontSize: '60px', marginBottom: '20px' }}>🐻</div>
+          <h2 style={{ color: colors.darkBlue, fontSize: '24px', marginBottom: '10px' }}>
+            Hold on...
+          </h2>
+          <p style={{ color: colors.uclaBlue, fontSize: '20px', fontWeight: '600' }}>
+            You are moments away from supporting A Bilingual Bruin! 💛💙
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'success') {
+    return (
+      <div style={modalStyle}>
+        <div style={{ ...contentStyle, textAlign: 'center', padding: '60px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            backgroundColor: '#4CAF50',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 30px',
+          }}>
+            <span style={{ color: 'white', fontSize: '40px' }}>✓</span>
+          </div>
+          <h2 style={{ color: colors.darkBlue, fontSize: '28px', marginBottom: '15px' }}>
+            Welcome to A Bilingual Bruin!
+          </h2>
+          <p style={{ color: '#666', marginBottom: '30px' }}>
+            Thank you for your subscription! Check your email for confirmation.
+          </p>
+          <button onClick={resetAndClose} style={buttonStyle}>
+            Start Exploring Resources
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 2FA Step
+  if (step === '2fa') {
+    return (
+      <div style={modalStyle}>
+        <div style={contentStyle}>
+          <button onClick={resetAndClose} style={{
+            position: 'absolute', top: '20px', right: '20px',
+            background: 'none', border: 'none', fontSize: '28px',
+            cursor: 'pointer', color: '#999',
+          }}>×</button>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <div style={{
+              width: '70px', height: '70px', backgroundColor: colors.uclaBlue,
+              borderRadius: '50%', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', margin: '0 auto 20px',
+            }}>
+              <span style={{ fontSize: '30px' }}>🔐</span>
+            </div>
+            <h2 style={{ color: colors.darkBlue, marginBottom: '10px' }}>
+              Set Up 2-Factor Authentication
+            </h2>
+            <p style={{ color: '#666' }}>
+              For your security, please choose your preferred authentication method
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+            <div
+              onClick={() => handle2FA('phone')}
+              style={{
+                flex: 1,
+                padding: '30px 20px',
+                border: `3px solid ${colors.uclaBlue}30`,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.borderColor = colors.uclaGold}
+              onMouseOut={(e) => e.currentTarget.style.borderColor = colors.uclaBlue + '30'}
+            >
+              <div style={{ fontSize: '40px', marginBottom: '15px' }}>📱</div>
+              <h3 style={{ color: colors.darkBlue, marginBottom: '8px' }}>Phone Text</h3>
+              <p style={{ color: '#666', fontSize: '14px' }}>
+                Receive a code via SMS
+              </p>
+            </div>
+            <div
+              onClick={() => handle2FA('email')}
+              style={{
+                flex: 1,
+                padding: '30px 20px',
+                border: `3px solid ${colors.uclaBlue}30`,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.3s ease',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.borderColor = colors.uclaGold}
+              onMouseOut={(e) => e.currentTarget.style.borderColor = colors.uclaBlue + '30'}
+            >
+              <div style={{ fontSize: '40px', marginBottom: '15px' }}>📧</div>
+              <h3 style={{ color: colors.darkBlue, marginBottom: '8px' }}>Email</h3>
+              <p style={{ color: '#666', fontSize: '14px' }}>
+                Receive a code via email
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Credit Card Form
+  if (paymentType === 'credit') {
+    return (
+      <div style={modalStyle}>
+        <div style={contentStyle}>
+          <button onClick={resetAndClose} style={{
+            position: 'absolute', top: '20px', right: '20px',
+            background: 'none', border: 'none', fontSize: '28px',
+            cursor: 'pointer', color: '#999',
+          }}>×</button>
+          <h2 style={{ color: colors.darkBlue, marginBottom: '8px', textAlign: 'center' }}>
+            Credit Card Payment
+          </h2>
+          <p style={{ color: '#666', textAlign: 'center', marginBottom: '25px' }}>
+            {plan.name} - ${plan.price}/month
+          </p>
+
+          {!cardType ? (
+            <>
+              <p style={{ ...labelStyle, textAlign: 'center', marginBottom: '20px' }}>
+                Select Your Card Type
+              </p>
+              <div style={{ display: 'flex', marginBottom: '20px' }}>
+                {['Visa', 'Mastercard', 'American Express'].map((card) => (
+                  <div
+                    key={card}
+                    onClick={() => handleCardSelect(card)}
+                    style={cardOptionStyle(cardType === card)}
+                  >
+                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>
+                      {card === 'Visa' ? '💳' : card === 'Mastercard' ? '🔴' : '💠'}
+                    </div>
+                    <span style={{ fontWeight: '600', color: colors.darkBlue }}>{card}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div style={{
+                backgroundColor: colors.cream,
+                padding: '12px 20px',
+                borderRadius: '10px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <span style={{ fontWeight: '600', color: colors.darkBlue }}>
+                  {cardType}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCardType('')}
+                  style={{
+                    background: 'none', border: 'none',
+                    color: colors.uclaBlue, cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  Change
+                </button>
+              </div>
+
+              <label style={labelStyle}>Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="John Doe"
+                style={inputStyle}
+                required
+              />
+
+              <label style={labelStyle}>Email Address</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="john@example.com"
+                style={inputStyle}
+                required
+              />
+
+              <label style={labelStyle}>Phone Number</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="(555) 123-4567"
+                style={inputStyle}
+                required
+              />
+
+              <label style={labelStyle}>Card Number</label>
+              <input
+                type="text"
+                name="cardNumber"
+                value={formData.cardNumber}
+                onChange={handleInputChange}
+                placeholder="1234 5678 9012 3456"
+                style={inputStyle}
+                required
+              />
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Expiry Date</label>
+                  <input
+                    type="text"
+                    name="expiry"
+                    value={formData.expiry}
+                    onChange={handleInputChange}
+                    placeholder="MM/YY"
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>CVV</label>
+                  <input
+                    type="text"
+                    name="cvv"
+                    value={formData.cvv}
+                    onChange={handleInputChange}
+                    placeholder="123"
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+              </div>
+
+              <label style={labelStyle}>Billing Address</label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="123 Main Street"
+                style={inputStyle}
+                required
+              />
+
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ flex: 2 }}>
+                  <label style={labelStyle}>City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    placeholder="Los Angeles"
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>State</label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    placeholder="CA"
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>ZIP</label>
+                  <input
+                    type="text"
+                    name="zip"
+                    value={formData.zip}
+                    onChange={handleInputChange}
+                    placeholder="90024"
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+              </div>
+
+              <button type="submit" style={buttonStyle}>
+                Continue to Verification
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Venmo Form
+  if (paymentType === 'venmo') {
+    return (
+      <div style={modalStyle}>
+        <div style={contentStyle}>
+          <button onClick={resetAndClose} style={{
+            position: 'absolute', top: '20px', right: '20px',
+            background: 'none', border: 'none', fontSize: '28px',
+            cursor: 'pointer', color: '#999',
+          }}>×</button>
+          <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+            <div style={{
+              width: '70px', height: '70px',
+              backgroundColor: '#3D95CE',
+              borderRadius: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 15px',
+            }}>
+              <span style={{ color: 'white', fontWeight: 'bold', fontSize: '24px' }}>V</span>
+            </div>
+            <h2 style={{ color: colors.darkBlue, marginBottom: '8px' }}>
+              Pay with Venmo
+            </h2>
+            <p style={{ color: '#666' }}>
+              {plan.name} - ${plan.price}/month
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <label style={labelStyle}>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="John Doe"
+              style={inputStyle}
+              required
+            />
+
+            <label style={labelStyle}>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="john@example.com"
+              style={inputStyle}
+              required
+            />
+
+            <label style={labelStyle}>Phone Number (linked to Venmo)</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="(555) 123-4567"
+              style={inputStyle}
+              required
+            />
+
+            <label style={labelStyle}>Venmo Username</label>
+            <input
+              type="text"
+              name="venmoUsername"
+              value={formData.venmoUsername}
+              onChange={handleInputChange}
+              placeholder="@your-venmo-username"
+              style={inputStyle}
+              required
+            />
+
+            <div style={{
+              backgroundColor: '#E8F4FC',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+            }}>
+              <p style={{ color: '#3D95CE', fontSize: '14px', margin: 0 }}>
+                ℹ️ You'll receive a Venmo payment request after verification. 
+                Please ensure your Venmo account is active and has sufficient funds or a linked payment method.
+              </p>
+            </div>
+
+            <button type="submit" style={{ ...buttonStyle, backgroundColor: '#3D95CE' }}>
+              Continue to Verification
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Apple Pay Form
+  if (paymentType === 'apple') {
+    return (
+      <div style={modalStyle}>
+        <div style={contentStyle}>
+          <button onClick={resetAndClose} style={{
+            position: 'absolute', top: '20px', right: '20px',
+            background: 'none', border: 'none', fontSize: '28px',
+            cursor: 'pointer', color: '#999',
+          }}>×</button>
+          <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+            <div style={{
+              width: '70px', height: '70px',
+              backgroundColor: '#000',
+              borderRadius: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 15px',
+            }}>
+              <span style={{ color: 'white', fontSize: '30px' }}></span>
+            </div>
+            <h2 style={{ color: colors.darkBlue, marginBottom: '8px' }}>
+              Pay with Apple Pay
+            </h2>
+            <p style={{ color: '#666' }}>
+              {plan.name} - ${plan.price}/month
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <label style={labelStyle}>Full Name (as on Apple ID)</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="John Doe"
+              style={inputStyle}
+              required
+            />
+
+            <label style={labelStyle}>Apple ID Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="john@icloud.com"
+              style={inputStyle}
+              required
+            />
+
+            <label style={labelStyle}>Phone Number (linked to Apple ID)</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="(555) 123-4567"
+              style={inputStyle}
+              required
+            />
+
+            <label style={labelStyle}>Billing Address</label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              placeholder="123 Main Street"
+              style={inputStyle}
+              required
+            />
+
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div style={{ flex: 2 }}>
+                <label style={labelStyle}>City</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="Los Angeles"
+                  style={inputStyle}
+                  required
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>State</label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="CA"
+                  style={inputStyle}
+                  required
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>ZIP</label>
+                <input
+                  type="text"
+                  name="zip"
+                  value={formData.zip}
+                  onChange={handleInputChange}
+                  placeholder="90024"
+                  style={inputStyle}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{
+              backgroundColor: '#F5F5F7',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+            }}>
+              <p style={{ color: '#1D1D1F', fontSize: '14px', margin: 0 }}>
+                ℹ️ After verification, you'll receive an Apple Pay prompt on your device. 
+                Please have your iPhone, iPad, or Mac ready to confirm with Face ID, Touch ID, or passcode.
+              </p>
+            </div>
+
+            <button type="submit" style={{ ...buttonStyle, backgroundColor: '#000' }}>
+              Continue to Verification
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+// Main App Component
+export default function ABilingualBruin() {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [paymentModal, setPaymentModal] = useState({ isOpen: false, type: '', plan: null });
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const plans = [
+    {
+      name: 'Starter',
+      price: 9.99,
+      features: ['Access to 50+ bilingual worksheets', 'Monthly new resources', 'Email support', 'Print-ready PDFs'],
+      popular: false,
+    },
+    {
+      name: 'Educator Pro',
+      price: 19.99,
+      features: ['Access to ALL 500+ resources', 'Weekly new content', 'Priority support', 'Editable templates', 'Exclusive lesson plans', 'Video tutorials'],
+      popular: true,
+    },
+    {
+      name: 'School License',
+      price: 49.99,
+      features: ['Unlimited staff access', 'Custom resource requests', 'Dedicated support line', 'Professional development', 'School-wide implementation', 'Annual curriculum planning'],
+      popular: false,
+    },
+  ];
+
+  const resources = [
+    { title: 'Spanish Sight Words Bundle', grade: 'K-2', downloads: '2.4k', rating: 4.9, price: 'Premium' },
+    { title: 'Bilingual Math Centers', grade: '1-3', downloads: '1.8k', rating: 4.8, price: 'Premium' },
+    { title: 'Dual Language Reading Passages', grade: '2-4', downloads: '3.1k', rating: 5.0, price: 'Premium' },
+    { title: 'Spanish Phonics Worksheets', grade: 'K-1', downloads: '2.9k', rating: 4.9, price: 'Premium' },
+    { title: 'Bilingual Science Units', grade: '3-5', downloads: '1.2k', rating: 4.7, price: 'Premium' },
+    { title: 'Cultural Heritage Projects', grade: 'K-5', downloads: '890', rating: 4.8, price: 'Free' },
+  ];
+
+  // Navigation Component
+  const Navigation = () => (
+    <nav style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 100,
+      backgroundColor: isScrolled ? colors.white : 'transparent',
+      boxShadow: isScrolled ? '0 4px 20px rgba(0,0,0,0.1)' : 'none',
+      transition: 'all 0.3s ease',
+    }}>
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '15px 40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div 
+          onClick={() => setCurrentPage('home')}
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '15px',
+            cursor: 'pointer',
+          }}
+        >
+          <img 
+            src="https://i.imgur.com/Dykfgx4.png" 
+            alt="A Bilingual Bruin Logo"
+            style={{ height: '60px', width: 'auto' }}
+          />
+          <div>
+            <h1 style={{
+              fontSize: '22px',
+              fontWeight: '800',
+              color: isScrolled ? colors.darkBlue : colors.white,
+              margin: 0,
+              fontFamily: '"Playfair Display", Georgia, serif',
+              textShadow: isScrolled ? 'none' : '0 2px 4px rgba(0,0,0,0.3)',
+            }}>
+              A Bilingual Bruin
+            </h1>
+            <p style={{
+              fontSize: '11px',
+              color: isScrolled ? colors.uclaBlue : colors.uclaGold,
+              margin: 0,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              fontWeight: '600',
+            }}>
+              Dual Language Resources
+            </p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
+          {['Home', 'Resources', 'Subscribe', 'About'].map((item) => (
+            <button
+              key={item}
+              onClick={() => setCurrentPage(item.toLowerCase())}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: isScrolled ? colors.darkBlue : colors.white,
+                fontSize: '16px',
+                fontWeight: currentPage === item.toLowerCase() ? '700' : '500',
+                cursor: 'pointer',
+                position: 'relative',
+                textShadow: isScrolled ? 'none' : '0 1px 3px rgba(0,0,0,0.3)',
+              }}
+            >
+              {item}
+              {currentPage === item.toLowerCase() && (
+                <span style={{
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '30px',
+                  height: '3px',
+                  backgroundColor: colors.uclaGold,
+                  borderRadius: '2px',
+                }} />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+
+  // Hero Section
+  const HeroSection = () => (
+    <section style={{
+      minHeight: '100vh',
+      background: `linear-gradient(135deg, ${colors.darkBlue} 0%, ${colors.uclaBlue} 50%, ${colors.darkBlue} 100%)`,
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      overflow: 'hidden',
+    }}>
+      {/* Decorative Elements */}
+      <div style={{
+        position: 'absolute',
+        top: '10%',
+        right: '5%',
+        width: '400px',
+        height: '400px',
+        backgroundColor: colors.uclaGold,
+        borderRadius: '50%',
+        opacity: 0.1,
+        filter: 'blur(80px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '10%',
+        left: '10%',
+        width: '300px',
+        height: '300px',
+        backgroundColor: colors.uclaGold,
+        borderRadius: '50%',
+        opacity: 0.15,
+        filter: 'blur(60px)',
+      }} />
+      
+      {/* Bear paw prints pattern */}
+      {[...Array(8)].map((_, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          top: `${15 + (i * 12)}%`,
+          right: `${5 + (i % 3) * 8}%`,
+          fontSize: '40px',
+          opacity: 0.1,
+          transform: `rotate(${-30 + i * 10}deg)`,
+        }}>🐾</div>
+      ))}
+
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '120px 40px 80px',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '80px',
+        alignItems: 'center',
+      }}>
+        <div style={{ animation: 'slideInLeft 1s ease' }}>
+          <div style={{
+            display: 'inline-block',
+            backgroundColor: colors.uclaGold,
+            padding: '8px 20px',
+            borderRadius: '30px',
+            marginBottom: '25px',
+          }}>
+            <span style={{
+              color: colors.darkBlue,
+              fontWeight: '700',
+              fontSize: '14px',
+              letterSpacing: '1px',
+            }}>
+              🎓 UCLA PROUD • EST. 2024
+            </span>
+          </div>
+          <h1 style={{
+            fontSize: '64px',
+            fontWeight: '800',
+            color: colors.white,
+            lineHeight: 1.1,
+            marginBottom: '25px',
+            fontFamily: '"Playfair Display", Georgia, serif',
+          }}>
+            Bilingual Education,
+            <span style={{ color: colors.uclaGold, display: 'block' }}>
+              Brilliantly Delivered
+            </span>
+          </h1>
+          <p style={{
+            fontSize: '20px',
+            color: 'rgba(255,255,255,0.85)',
+            lineHeight: 1.7,
+            marginBottom: '40px',
+            maxWidth: '500px',
+          }}>
+            30+ years of educational excellence from a UCLA Spanish major, packed into ready-to-use 
+            dual language resources. Empower your students with culturally rich, academically rigorous 
+            curriculum materials created by a fluent Spanish speaker.
+          </p>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <button
+              onClick={() => setCurrentPage('resources')}
+              style={{
+                padding: '18px 40px',
+                backgroundColor: colors.uclaGold,
+                color: colors.darkBlue,
+                border: 'none',
+                borderRadius: '50px',
+                fontSize: '18px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 10px 30px rgba(255,209,0,0.3)',
+              }}
+            >
+              Explore Resources
+            </button>
+            <button
+              onClick={() => setCurrentPage('about')}
+              style={{
+                padding: '18px 40px',
+                backgroundColor: 'transparent',
+                color: colors.white,
+                border: `2px solid ${colors.white}`,
+                borderRadius: '50px',
+                fontSize: '18px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Meet Mrs. Moss
+            </button>
+          </div>
+        </div>
+        <div style={{
+          position: 'relative',
+          animation: 'slideInRight 1s ease',
+        }}>
+          <div style={{
+            backgroundColor: colors.white,
+            borderRadius: '30px',
+            padding: '40px',
+            boxShadow: '0 30px 60px rgba(0,0,0,0.3)',
+            position: 'relative',
+            zIndex: 2,
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '20px',
+              marginBottom: '30px',
+            }}>
+              {[
+                { num: '500+', label: 'Resources' },
+                { num: '30+', label: 'Years Experience' },
+                { num: '10K+', label: 'Students Impacted' },
+                { num: '100%', label: 'Bilingual' },
+              ].map((stat, i) => (
+                <div key={i} style={{
+                  textAlign: 'center',
+                  padding: '20px',
+                  backgroundColor: i % 2 === 0 ? colors.cream : `${colors.uclaBlue}10`,
+                  borderRadius: '15px',
+                }}>
+                  <div style={{
+                    fontSize: '36px',
+                    fontWeight: '800',
+                    color: colors.uclaBlue,
+                    fontFamily: '"Playfair Display", Georgia, serif',
+                  }}>{stat.num}</div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: colors.darkBlue,
+                    fontWeight: '500',
+                  }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '15px',
+              padding: '20px',
+              backgroundColor: colors.cream,
+              borderRadius: '15px',
+            }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                backgroundColor: colors.uclaGold,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+              }}>⭐</div>
+              <div>
+                <div style={{ fontWeight: '700', color: colors.darkBlue }}>
+                  Trusted by Educators Statewide
+                </div>
+                <div style={{ fontSize: '14px', color: '#666' }}>
+                  Serving California's diverse classrooms
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{
+            position: 'absolute',
+            top: '-20px',
+            right: '-20px',
+            width: '150px',
+            height: '150px',
+            backgroundColor: colors.uclaGold,
+            borderRadius: '50%',
+            zIndex: 1,
+            opacity: 0.5,
+          }} />
+        </div>
+      </div>
+    </section>
+  );
+
+  // Resources Page
+  const ResourcesPage = () => (
+    <section style={{
+      minHeight: '100vh',
+      backgroundColor: colors.cream,
+      paddingTop: '120px',
+    }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px 80px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <span style={{
+            display: 'inline-block',
+            backgroundColor: `${colors.uclaBlue}15`,
+            color: colors.uclaBlue,
+            padding: '10px 25px',
+            borderRadius: '30px',
+            fontWeight: '600',
+            fontSize: '14px',
+            marginBottom: '20px',
+          }}>
+            📚 RESOURCE LIBRARY
+          </span>
+          <h2 style={{
+            fontSize: '48px',
+            fontWeight: '800',
+            color: colors.darkBlue,
+            marginBottom: '20px',
+            fontFamily: '"Playfair Display", Georgia, serif',
+          }}>
+            Bilingual Teaching Resources
+          </h2>
+          <p style={{
+            fontSize: '18px',
+            color: '#666',
+            maxWidth: '600px',
+            margin: '0 auto',
+          }}>
+            Carefully crafted dual language materials designed by an educator with 30+ years of experience
+          </p>
+        </div>
+
+        {/* Search & Filter Bar */}
+        <div style={{
+          backgroundColor: colors.white,
+          padding: '25px 35px',
+          borderRadius: '20px',
+          marginBottom: '50px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
+          display: 'flex',
+          gap: '20px',
+          alignItems: 'center',
+        }}>
+          <div style={{ flex: 2, position: 'relative' }}>
+            <span style={{
+              position: 'absolute',
+              left: '20px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: '20px',
+            }}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search bilingual resources..."
+              style={{
+                width: '100%',
+                padding: '18px 20px 18px 55px',
+                border: `2px solid ${colors.uclaBlue}20`,
+                borderRadius: '15px',
+                fontSize: '16px',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+          <select style={{
+            padding: '18px 25px',
+            border: `2px solid ${colors.uclaBlue}20`,
+            borderRadius: '15px',
+            fontSize: '16px',
+            backgroundColor: colors.white,
+            cursor: 'pointer',
+          }}>
+            <option>All Grades</option>
+            <option>Pre-K</option>
+            <option>Kindergarten</option>
+            <option>1st-2nd</option>
+            <option>3rd-5th</option>
+          </select>
+          <select style={{
+            padding: '18px 25px',
+            border: `2px solid ${colors.uclaBlue}20`,
+            borderRadius: '15px',
+            fontSize: '16px',
+            backgroundColor: colors.white,
+            cursor: 'pointer',
+          }}>
+            <option>All Subjects</option>
+            <option>Reading/ELA</option>
+            <option>Math</option>
+            <option>Science</option>
+            <option>Social Studies</option>
+          </select>
+        </div>
+
+        {/* Resource Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '30px',
+        }}>
+          {resources.map((resource, i) => (
+            <div key={i} style={{
+              backgroundColor: colors.white,
+              borderRadius: '20px',
+              overflow: 'hidden',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
+            }}>
+              <div style={{
+                height: '180px',
+                background: `linear-gradient(135deg, ${colors.uclaBlue} 0%, ${colors.darkBlue} 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+              }}>
+                <span style={{ fontSize: '60px', opacity: 0.9 }}>
+                  {['📖', '🔢', '📚', '🔤', '🔬', '🌎'][i]}
+                </span>
+                <div style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  backgroundColor: resource.price === 'Free' ? '#4CAF50' : colors.uclaGold,
+                  color: resource.price === 'Free' ? colors.white : colors.darkBlue,
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                }}>
+                  {resource.price}
+                </div>
+              </div>
+              <div style={{ padding: '25px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '12px',
+                }}>
+                  <span style={{
+                    backgroundColor: `${colors.uclaBlue}15`,
+                    color: colors.uclaBlue,
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                  }}>Grade {resource.grade}</span>
+                  <span style={{ fontSize: '14px', color: '#999' }}>
+                    ⭐ {resource.rating}
+                  </span>
+                </div>
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: colors.darkBlue,
+                  marginBottom: '10px',
+                  lineHeight: 1.3,
+                }}>{resource.title}</h3>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <span style={{ fontSize: '14px', color: '#999' }}>
+                    📥 {resource.downloads} downloads
+                  </span>
+                  <button style={{
+                    backgroundColor: colors.uclaGold,
+                    color: colors.darkBlue,
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                  }}>
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
+          <button
+            onClick={() => setCurrentPage('subscribe')}
+            style={{
+              padding: '18px 50px',
+              backgroundColor: colors.uclaBlue,
+              color: colors.white,
+              border: 'none',
+              borderRadius: '50px',
+              fontSize: '18px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 10px 30px rgba(39,116,174,0.3)',
+            }}
+          >
+            Subscribe for Full Access →
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+
+  // Subscribe Page
+  const SubscribePage = () => (
+    <section style={{
+      minHeight: '100vh',
+      background: `linear-gradient(180deg, ${colors.cream} 0%, ${colors.white} 100%)`,
+      paddingTop: '120px',
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 40px 80px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <span style={{
+            display: 'inline-block',
+            backgroundColor: colors.uclaGold,
+            color: colors.darkBlue,
+            padding: '10px 25px',
+            borderRadius: '30px',
+            fontWeight: '700',
+            fontSize: '14px',
+            marginBottom: '20px',
+          }}>
+            💳 SUBSCRIPTION PLANS
+          </span>
+          <h2 style={{
+            fontSize: '48px',
+            fontWeight: '800',
+            color: colors.darkBlue,
+            marginBottom: '20px',
+            fontFamily: '"Playfair Display", Georgia, serif',
+          }}>
+            Choose Your Plan
+          </h2>
+          <p style={{
+            fontSize: '18px',
+            color: '#666',
+            maxWidth: '600px',
+            margin: '0 auto',
+          }}>
+            Invest in quality bilingual education resources created by an experienced educator
+          </p>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '30px',
+          marginBottom: '60px',
+        }}>
+          {plans.map((plan, i) => (
+            <div key={i} style={{
+              backgroundColor: colors.white,
+              borderRadius: '25px',
+              padding: '40px',
+              boxShadow: plan.popular ? `0 20px 60px rgba(39,116,174,0.25)` : '0 10px 40px rgba(0,0,0,0.08)',
+              border: plan.popular ? `3px solid ${colors.uclaGold}` : '3px solid transparent',
+              position: 'relative',
+              transform: plan.popular ? 'scale(1.05)' : 'scale(1)',
+            }}>
+              {plan.popular && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: colors.uclaGold,
+                  color: colors.darkBlue,
+                  padding: '8px 25px',
+                  borderRadius: '20px',
+                  fontWeight: '700',
+                  fontSize: '12px',
+                }}>
+                  ⭐ MOST POPULAR
+                </div>
+              )}
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: colors.darkBlue,
+                marginBottom: '10px',
+              }}>{plan.name}</h3>
+              <div style={{
+                fontSize: '48px',
+                fontWeight: '800',
+                color: colors.uclaBlue,
+                marginBottom: '5px',
+                fontFamily: '"Playfair Display", Georgia, serif',
+              }}>
+                ${plan.price}
+                <span style={{ fontSize: '18px', color: '#999', fontWeight: '400' }}>/month</span>
+              </div>
+              <p style={{ color: '#999', marginBottom: '30px', fontSize: '14px' }}>
+                Billed monthly, cancel anytime
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: '30px' }}>
+                {plan.features.map((feature, j) => (
+                  <li key={j} style={{
+                    padding: '12px 0',
+                    borderBottom: j < plan.features.length - 1 ? '1px solid #eee' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    color: colors.darkBlue,
+                  }}>
+                    <span style={{
+                      width: '24px',
+                      height: '24px',
+                      backgroundColor: `${colors.uclaGold}30`,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                    }}>✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              {/* Payment Options */}
+              <p style={{
+                fontSize: '14px',
+                color: '#666',
+                marginBottom: '15px',
+                textAlign: 'center',
+                fontWeight: '600',
+              }}>
+                Select Payment Method
+              </p>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <button
+                  onClick={() => setPaymentModal({ isOpen: true, type: 'credit', plan })}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    backgroundColor: colors.uclaBlue,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  💳 Card
+                </button>
+                <button
+                  onClick={() => setPaymentModal({ isOpen: true, type: 'venmo', plan })}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    backgroundColor: '#3D95CE',
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  Venmo
+                </button>
+                <button
+                  onClick={() => setPaymentModal({ isOpen: true, type: 'apple', plan })}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    backgroundColor: '#000',
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                   Pay
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Trust Badges */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '50px',
+          padding: '40px',
+          backgroundColor: colors.white,
+          borderRadius: '20px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
+        }}>
+          {[
+            { icon: '🔒', label: 'Secure Payment' },
+            { icon: '↩️', label: '30-Day Guarantee' },
+            { icon: '🎓', label: 'Educator Created' },
+            { icon: '💬', label: '24/7 Support' },
+          ].map((badge, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{badge.icon}</div>
+              <div style={{ fontSize: '14px', color: '#666', fontWeight: '500' }}>{badge.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  // About Page
+  const AboutPage = () => (
+    <section style={{
+      minHeight: '100vh',
+      backgroundColor: colors.white,
+      paddingTop: '100px',
+    }}>
+      {/* Hero Banner */}
+      <div style={{
+        background: `linear-gradient(135deg, ${colors.darkBlue} 0%, ${colors.uclaBlue} 100%)`,
+        padding: '80px 40px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          right: '10%',
+          transform: 'translateY(-50%)',
+          fontSize: '200px',
+          opacity: 0.1,
+        }}>🐻</div>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <span style={{
+            display: 'inline-block',
+            backgroundColor: colors.uclaGold,
+            color: colors.darkBlue,
+            padding: '10px 25px',
+            borderRadius: '30px',
+            fontWeight: '700',
+            fontSize: '14px',
+            marginBottom: '25px',
+          }}>
+            👩‍🏫 MEET THE EDUCATOR
+          </span>
+          <h1 style={{
+            fontSize: '56px',
+            fontWeight: '800',
+            color: colors.white,
+            marginBottom: '20px',
+            fontFamily: '"Playfair Display", Georgia, serif',
+          }}>
+            Cathy Moss
+          </h1>
+          <p style={{
+            fontSize: '22px',
+            color: colors.uclaGold,
+            fontWeight: '600',
+          }}>
+            Principal • Educator • UCLA Bruin
+          </p>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 40px' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '400px 1fr',
+          gap: '80px',
+          alignItems: 'start',
+        }}>
+          {/* Photo & Quick Stats */}
+          <div>
+            <div style={{
+              width: '100%',
+              aspectRatio: '1',
+              backgroundColor: colors.cream,
+              borderRadius: '30px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+              marginBottom: '30px',
+              position: 'relative',
+            }}>
+              <img 
+                src="https://resources.finalsite.net/images/f_auto,q_auto,t_image_size_1/v1745519383/gusdk12caus/tnmfsd0kwaea2vphrrh0/CathyMoss.jpg" 
+                alt="Cathy Moss"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+
+            {/* Quick Stats Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {[
+                { icon: '🎓', label: 'UCLA Graduate', value: 'Spanish Major' },
+                { icon: '📚', label: 'Experience', value: '30+ Years' },
+                { icon: '🏫', label: 'Current Role', value: 'Principal' },
+                { icon: '🌎', label: 'Languages', value: 'Fluent in Spanish' },
+              ].map((stat, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '20px',
+                  padding: '20px 25px',
+                  backgroundColor: i % 2 === 0 ? colors.cream : `${colors.uclaBlue}08`,
+                  borderRadius: '15px',
+                }}>
+                  <div style={{
+                    width: '50px',
+                    height: '50px',
+                    backgroundColor: colors.uclaGold,
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                  }}>{stat.icon}</div>
+                  <div>
+                    <div style={{ fontSize: '13px', color: '#999', marginBottom: '3px' }}>
+                      {stat.label}
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: colors.darkBlue }}>
+                      {stat.value}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Biography */}
+          <div>
+            <h2 style={{
+              fontSize: '36px',
+              fontWeight: '800',
+              color: colors.darkBlue,
+              marginBottom: '30px',
+              fontFamily: '"Playfair Display", Georgia, serif',
+            }}>
+              A Legacy of Educational Excellence
+            </h2>
+            
+            <div style={{
+              fontSize: '18px',
+              color: '#444',
+              lineHeight: 1.9,
+            }}>
+              <p style={{ marginBottom: '25px' }}>
+                With over <strong style={{ color: colors.uclaBlue }}>30 years of dedicated service</strong> in 
+                education, Cathy Moss has transformed the lives of countless students and educators throughout 
+                her remarkable career. A proud <strong style={{ color: colors.uclaBlue }}>UCLA Bruin</strong> who 
+                majored in <strong style={{ color: colors.uclaBlue }}>Spanish</strong>, she is fully fluent in 
+                both English and Spanish—bringing authentic bilingual expertise and the spirit of excellence 
+                to everything she does.
+              </p>
+              
+              <p style={{ marginBottom: '25px' }}>
+                Currently serving as <strong style={{ color: colors.uclaBlue }}>Principal at Rod Kelley Elementary School</strong>, 
+                Mrs. Moss leads with passion, vision, and an unwavering commitment to student success. Her 
+                leadership has created a nurturing environment where both English and Spanish-speaking 
+                students thrive academically and personally.
+              </p>
+
+              <p style={{ marginBottom: '25px' }}>
+                Her foundation in <strong style={{ color: colors.uclaBlue }}>Spanish language and culture</strong> from 
+                UCLA gives her a unique perspective on bilingual education. Unlike educators who learn Spanish 
+                as a second language later in their careers, Mrs. Moss's deep academic study of the language 
+                allows her to create resources that are linguistically authentic and culturally meaningful.
+              </p>
+              
+              <p style={{ marginBottom: '25px' }}>
+                Prior to her current role, she served as <strong style={{ color: colors.uclaBlue }}>Vice Principal 
+                at San Martin Gwinn Elementary School</strong>, where she honed her administrative skills and 
+                developed innovative approaches to dual-language instruction that continue to influence 
+                her work today.
+              </p>
+
+              <div style={{
+                backgroundColor: colors.cream,
+                padding: '30px',
+                borderRadius: '20px',
+                borderLeft: `5px solid ${colors.uclaGold}`,
+                margin: '40px 0',
+              }}>
+                <p style={{
+                  fontSize: '20px',
+                  fontStyle: 'italic',
+                  color: colors.darkBlue,
+                  margin: 0,
+                  lineHeight: 1.7,
+                }}>
+                  "Every child deserves access to quality bilingual education. Language is not just a 
+                  skill—it's a bridge to culture, identity, and endless opportunities."
+                </p>
+                <p style={{
+                  marginTop: '15px',
+                  marginBottom: 0,
+                  color: colors.uclaBlue,
+                  fontWeight: '600',
+                }}>
+                  — Cathy Moss
+                </p>
+              </div>
+
+              <p style={{ marginBottom: '25px' }}>
+                Through <strong style={{ color: colors.uclaBlue }}>A Bilingual Bruin</strong>, Mrs. Moss 
+                shares her wealth of knowledge, proven strategies, and carefully crafted resources with 
+                educators everywhere. Each resource reflects her deep understanding of dual-language 
+                pedagogy and her commitment to culturally responsive teaching.
+              </p>
+
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: colors.darkBlue,
+                marginTop: '40px',
+                marginBottom: '20px',
+              }}>
+                Areas of Expertise
+              </h3>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '15px',
+              }}>
+                {[
+                  'Dual Language Immersion',
+                  'Bilingual Curriculum Design',
+                  'School Leadership',
+                  'Teacher Professional Development',
+                  'Culturally Responsive Pedagogy',
+                  'English Language Development',
+                  'Spanish Language Arts',
+                  'Family Engagement Strategies',
+                ].map((skill, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '15px 20px',
+                    backgroundColor: `${colors.uclaBlue}08`,
+                    borderRadius: '12px',
+                  }}>
+                    <span style={{
+                      width: '28px',
+                      height: '28px',
+                      backgroundColor: colors.uclaGold,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                    }}>✓</span>
+                    <span style={{ fontWeight: '500', color: colors.darkBlue }}>{skill}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div style={{
+        background: `linear-gradient(135deg, ${colors.uclaGold} 0%, ${colors.lightGold} 100%)`,
+        padding: '80px 40px',
+        textAlign: 'center',
+      }}>
+        <h2 style={{
+          fontSize: '36px',
+          fontWeight: '800',
+          color: colors.darkBlue,
+          marginBottom: '20px',
+          fontFamily: '"Playfair Display", Georgia, serif',
+        }}>
+          Ready to Transform Your Classroom?
+        </h2>
+        <p style={{
+          fontSize: '18px',
+          color: colors.darkBlue,
+          opacity: 0.8,
+          marginBottom: '30px',
+          maxWidth: '600px',
+          margin: '0 auto 30px',
+        }}>
+          Join thousands of educators using A Bilingual Bruin resources to create engaging, 
+          culturally rich learning experiences.
+        </p>
+        <button
+          onClick={() => setCurrentPage('subscribe')}
+          style={{
+            padding: '20px 50px',
+            backgroundColor: colors.darkBlue,
+            color: colors.white,
+            border: 'none',
+            borderRadius: '50px',
+            fontSize: '18px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            boxShadow: '0 10px 30px rgba(0,59,92,0.3)',
+          }}
+        >
+          Start Your Subscription Today
+        </button>
+      </div>
+    </section>
+  );
+
+  // Footer
+  const Footer = () => (
+    <footer style={{
+      backgroundColor: colors.darkBlue,
+      color: colors.white,
+      padding: '60px 40px 30px',
+    }}>
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '50px',
+        marginBottom: '50px',
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <img 
+              src="https://i.imgur.com/Dykfgx4.png" 
+              alt="Logo"
+              style={{ height: '50px', width: 'auto' }}
+            />
+            <div>
+              <div style={{
+                fontWeight: '700',
+                fontSize: '18px',
+                fontFamily: '"Playfair Display", Georgia, serif',
+              }}>A Bilingual Bruin</div>
+              <div style={{ fontSize: '12px', color: colors.uclaGold }}>UCLA Proud 🐻</div>
+            </div>
+          </div>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
+            Quality bilingual education resources created by an educator with 30+ years of experience.
+          </p>
+        </div>
+        <div>
+          <h4 style={{ marginBottom: '20px', color: colors.uclaGold }}>Quick Links</h4>
+          {['Home', 'Resources', 'Subscribe', 'About'].map((link, i) => (
+            <div key={i} style={{ marginBottom: '12px' }}>
+              <button
+                onClick={() => setCurrentPage(link.toLowerCase())}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(255,255,255,0.7)',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+              >
+                {link}
+              </button>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h4 style={{ marginBottom: '20px', color: colors.uclaGold }}>Resources</h4>
+          {['Math', 'Reading/ELA', 'Science', 'Social Studies'].map((link, i) => (
+            <div key={i} style={{ marginBottom: '12px', color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>
+              {link}
+            </div>
+          ))}
+        </div>
+        <div>
+          <h4 style={{ marginBottom: '20px', color: colors.uclaGold }}>Contact</h4>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>
+            📧 contact@abilingualbruin.com
+          </p>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginBottom: '20px' }}>
+            📍 California, USA
+          </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {['📘', '📸', '🐦'].map((icon, i) => (
+              <div key={i} style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}>{icon}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        paddingTop: '30px',
+        textAlign: 'center',
+        fontSize: '14px',
+        color: 'rgba(255,255,255,0.5)',
+      }}>
+        © 2024 A Bilingual Bruin. All rights reserved. | Made with 💛💙 in California
+      </div>
+    </footer>
+  );
+
+  return (
+    <div style={{ fontFamily: '"DM Sans", -apple-system, sans-serif' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-50px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(50px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        input:focus {
+          border-color: ${colors.uclaBlue} !important;
+          box-shadow: 0 0 0 4px ${colors.uclaBlue}15;
+        }
+        
+        button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+      `}</style>
+      
+      <Navigation />
+      
+      {currentPage === 'home' && <HeroSection />}
+      {currentPage === 'resources' && <ResourcesPage />}
+      {currentPage === 'subscribe' && <SubscribePage />}
+      {currentPage === 'about' && <AboutPage />}
+      
+      <Footer />
+      
+      <PaymentModal
+        isOpen={paymentModal.isOpen}
+        onClose={() => setPaymentModal({ isOpen: false, type: '', plan: null })}
+        paymentType={paymentModal.type}
+        plan={paymentModal.plan}
+      />
+    </div>
+  );
+}
